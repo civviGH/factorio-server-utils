@@ -14,7 +14,7 @@ token = settings["token"]
 exe_directory = settings["exe_directory"]
 
 # get version of own executable
-exe_version = subprocess.check_output([exe_directory + "/factorio", "--version"])
+exe_version = subprocess.check_output([exe_directory + "factorio", "--version"])
 exe_version = re.search("Version: (\d+\.\d+\.\d+)", exe_version)
 exe_version = exe_version.group(1)
 print("Auto detected binary version as {}".format(exe_version))
@@ -57,10 +57,10 @@ for download_link in download_links:
 for j in range(i):
     try:
         print("patching {}/{}".format(j+1,num_updates))
-        subprocess.check_output([exe_directory + "/factorio", "--apply-update", "updates/" + str(j) + ".zip"])
+        subprocess.check_output([exe_directory + "factorio", "--apply-update", "updates/" + str(j) + ".zip"])
     except subprocess.CalledPorcessError as ex:
         print(ex.output)
         raise
     os.remove("updates/" + str(j) + ".zip")
 print("Finished. Printing executable version:")
-print(subprocess.check_output([exe_directory + "/factorio" , "--version"]))
+print(subprocess.check_output([exe_directory + "factorio" , "--version"]))

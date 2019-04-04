@@ -1,6 +1,6 @@
 {
+	"_comment_username": "Your factorio username. Used to retrieve updates",
 	"username": "",
-	"token": "",
-	"mod_directory": "",
-	"exe_directory": ""
+	"_comment_token": "The token for your username, used for authentication instead of password",
+	"token": ""
 }

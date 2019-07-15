@@ -20,10 +20,13 @@ Options:
 """
 
 import psutil, re, subprocess, socket, os, jinja2, time, json, sys
+import requests
 
 class FactorioServer:
 
   used_ports = []
+  updater_url = "https://updater.factorio.com/get-available-versions"
+  latest_version = None
 
   def get_process_information(self):
     """gathers process information for server"""
@@ -59,6 +62,19 @@ class FactorioServer:
       if self.check_if_port_is_open(i):
         return i
     return None
+
+  def find_latest_version(self):
+    if FactorioServer.latest_version is not None:
+      return FactorioServer.latest_version
+    exe_major = self.version.split(".")[1]
+    available_updates = json.loads(requests.get(FactorioServer.updater_url).content)["core-linux_headless64"][:-1]
+    minor_updates = []
+    for update in available_updates:
+      up_to = update["to"]
+      if up_to.split(".")[1] == exe_major:
+        minor_updates.append(int(up_to.split(".")[-1]))
+    FactorioServer.latest_version = ".".join(self.version.split(".")[:-1]) + "." + str(max(minor_updates))
+    return FactorioServer.latest_version
 
   def get_free_port_from_os(self):
     tcp_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -150,9 +166,10 @@ class FactorioServer:
   def __repr__(self):
     #TODO pprint
     s_exists = "" if self.save_exists else " not"
+    s_version = "" if self.version == self.find_latest_version() else f" update to {self.find_latest_version()} available"
     return f'''
     {self.name}
-    Version: {self.version}
+    Version: {self.version}{s_version}
     (running={self.is_running} with pid {self.pid})
     Port: {self.port}
     Saves do{s_exists} exist

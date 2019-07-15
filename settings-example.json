@@ -4,5 +4,14 @@
 	"_comment_token": "The token for your username, used for authentication instead of password",
 	"token": "",
 	"_comment_serverdir": "The directory where your headless servers are",
-	"serverdir": ""
+	"serverdir": "",
+
+  "_comment_startport": "We are looking for open ports to bind to starting with this one",
+  "startport": 23450,
+  "_comment_whitelist": "The server whitelist used. Contains a list of strings. Create whitelist file if none is found",
+  "whitelist": [
+  ],
+  "_comment_bindip": "Ip v4 to bind to. Defaults to 0.0.0.0",
+  "bindip": ""
+
 }

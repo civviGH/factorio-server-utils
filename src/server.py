@@ -26,6 +26,7 @@ class FactorioServer:
 
   used_ports = []
   updater_url = "https://updater.factorio.com/get-available-versions"
+  download_url = "https://updater.factorio.com/get-download-link"
   latest_version = None
 
   def get_process_information(self):
@@ -157,6 +158,19 @@ class FactorioServer:
 
   def update(self):
     #TODO
+    if self.is_running:
+      print("server is running. stopping it")
+      self.stop()
+    # get list of updates
+    current_version = self.version
+    available_updates = json.loads(requests.get(FactorioServer.updater_url).content)["core-linux_headless64"][:-1]
+    download_links = []
+    while current_version != self.find_latest_version():
+      for update in available_updates:
+        if update["from"] == current_version:
+          download_links.append(f"{FactorioServer.download_url}?username={self.settings['username']}&token={self.settings['token']}&apiVersion=2&from={update['from']}&to={update['to']}&package=core-linux_headless64")
+          current_version = update["to"]
+    #TODO list of updates is now known
     return
 
   def update_mods(self):

@@ -4,7 +4,7 @@
 factorio@factory:~/0.17-headless$ cat start_creative.sh
 #!/bin/bash
 creative/bin/x64/factorio --start-server creative/maps/creative.zip \
-	--port 23451 \
+  --port 23451 \
 	--bind 131.220.32.152 \
 	--server-settings creative/server-settings.json \
 	--server-whitelist creative/server-whitelist.json \
@@ -31,16 +31,12 @@ def print_usage():
   """
   print(usage_str)
 
-def get_factorio_version(path_to_exe):
-  """Returns the version of the factorio executable given by parameter"""
-  exe_version = str(subprocess.check_output([path_to_exe, "--version"]))
-  exe_version = re.search("Version: (\d+\.\d+\.\d+)", exe_version)
-  exe_version = exe_version.group(1)
-  return exe_version
-
 def get_server_list(SETTINGS):
   """Lists version and enabled mods of all servers found in SETTINGS.serverdir"""
   factorio_servers = []
+  if not os.path.isdir(SETTINGS["serverdir"]):
+    print(f"{SETTINGS['serverdir']} not found")
+    sys.exit(1)
   server_dirs = os.listdir(SETTINGS["serverdir"])
   for server in server_dirs:
     # check if actual factorio server directory or not
@@ -63,14 +59,6 @@ def load_settings():
     raise
 
   return settings
-
-def check_if_server_is_running(servername):
-  """check if a server named servername is running. returns pid if found, None else."""
-  processes = [proc.as_dict(attrs=['exe','pid','connections']) for proc in psutil.process_iter(attrs=['name']) if 'factorio' in proc.info['name']]
-  for p in processes:
-    if p['exe'].find(f"/{servername}/bin/x64/factorio") != -1:
-      return p['pid']
-  return
 
 def load_servers(SETTINGS):
   factorio_servers = get_server_list(SETTINGS)
@@ -124,6 +112,13 @@ def main():
     for server in SERVERS:
       if server.name == servername:
         server.restart()
+        return
+    return
+
+  if sys.argv[1] == "update":
+    for server in SERVERS:
+      if server.name == servername:
+        server.update()
         return
     return
 

@@ -54,9 +54,12 @@ def list_servers(SETTINGS):
 
   # now used cleaned up list
   for server in factorio_servers:
+    running = "(running)"
+    if check_if_server_is_running(server) is None:
+      running = ""
     exe_path = f"{SETTINGS['serverdir']}/{server}/bin/x64/factorio"
     exe_version = get_factorio_version(exe_path)
-    print(f"{server}:")
+    print(f"{server}: {running}")
     print(f" Version: {exe_version}")
   #TODO print mods, maybe with -m switch
   return

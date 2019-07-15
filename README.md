@@ -1,3 +1,5 @@
+OUTDATED README!
+
 # factorio-server-utils
 
 script to manage factorio headless servers

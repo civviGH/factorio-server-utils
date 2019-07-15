@@ -13,6 +13,7 @@ creative/bin/x64/factorio --start-server creative/maps/creative.zip \
 """
 
 import sys, json, os, subprocess, re, psutil
+from src.server import *
 
 def print_usage():
   #TODO
@@ -37,7 +38,7 @@ def get_factorio_version(path_to_exe):
   exe_version = exe_version.group(1)
   return exe_version
 
-def list_servers(SETTINGS):
+def get_server_list(SETTINGS):
   """Lists version and enabled mods of all servers found in SETTINGS.serverdir"""
   factorio_servers = []
   server_dirs = os.listdir(SETTINGS["serverdir"])
@@ -50,19 +51,8 @@ def list_servers(SETTINGS):
     factorio_servers.append(server)
   if len(factorio_servers) == 0:
     print(f"No factorio servers found in {SETTINGS['serverdir']}")
-    return
-
-  # now used cleaned up list
-  for server in factorio_servers:
-    running = "(running)"
-    if check_if_server_is_running(server) is None:
-      running = ""
-    exe_path = f"{SETTINGS['serverdir']}/{server}/bin/x64/factorio"
-    exe_version = get_factorio_version(exe_path)
-    print(f"{server}: {running}")
-    print(f" Version: {exe_version}")
-  #TODO print mods, maybe with -m switch
-  return
+    return []
+  return factorio_servers
 
 def load_settings():
   try:
@@ -82,6 +72,21 @@ def check_if_server_is_running(servername):
       return p['pid']
   return
 
+def load_servers(SETTINGS):
+  factorio_servers = get_server_list(SETTINGS)
+  servers = []
+  for f in factorio_servers:
+    servers.append(FactorioServer(f, SETTINGS))
+  return servers
+
+def get_servername_from_argv():
+  try:
+    servername = sys.argv[2]
+  except:
+    print(f"cant parse second argument as servername")
+    sys.exit(1)
+  return servername
+
 def main():
   if len(sys.argv) < 2:
     print_usage()
@@ -92,24 +97,34 @@ def main():
     return
 
   SETTINGS = load_settings()
+  SERVERS = load_servers(SETTINGS)
 
   if sys.argv[1] == "list":
-    list_servers(SETTINGS)
+    for server in SERVERS:
+      print(server)
     return
 
+  servername = get_servername_from_argv()
   if sys.argv[1] == "stop":
-    try:
-      servername = sys.argv[2]
-    except:
-      print(f"cant parse second argument as servername")
-      sys.exit(1)
-    pid = check_if_server_is_running(servername)
-    if pid is None:
-      print(f"no server with name {servername} running")
-      return
-    # stop server by sending SIGTERM to pid
-    psutil.Process(pid).terminate()
-    print(f"{servername} stopped")
+    for server in SERVERS:
+      if server.name == servername:
+        server.stop()
+        return
+    print(f"No server named {servername} found.")
+    return
+
+  if sys.argv[1] == "start":
+    for server in SERVERS:
+      if server.name == servername:
+        server.start()
+        return
+    return
+
+  if sys.argv[1] == "restart":
+    for server in SERVERS:
+      if server.name == servername:
+        server.restart()
+        return
     return
 
   # if we make it till here its an unknown option

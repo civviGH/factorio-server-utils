@@ -42,7 +42,6 @@ class FactorioServer:
 
   def check_if_port_is_open(self, port):
     if port in FactorioServer.used_ports:
-      print(f"port {port} in use. trying {port+1}")
       return False
     return True
 
@@ -111,6 +110,7 @@ class FactorioServer:
     return
 
   def start(self):
+    print(f"trying to start server '{self.name}'")
     if not self.save_exists:
       print(f"Server {self.name} does not have a save file. Please provide one in")
       print(f" {self.dir}/saves")
@@ -128,28 +128,40 @@ class FactorioServer:
     with open(f"{self.dir}/server-whitelist.json", "w") as wfile:
       wfile.write(json.dumps(self.settings['whitelist']))
     subprocess.Popen(f"{self.exe_dir}/factorio --start-server-load-latest --port {self.port} --server-settings {self.dir}/server-settings.json --server-whitelist {self.dir}/server-whitelist.json --use-server-whitelist".split(), stdout=subprocess.DEVNULL)
-    print(f"started server {self.name} on port {self.port}")
-    FactorioServer.used_ports.append(self.port)
+    time.sleep(1)
+    self.pid, self.is_running, self.port = self.get_process_information()
+    if self.is_running:
+      FactorioServer.used_ports.append(self.port)
+      print(f"started '{self.name}' on port {self.port}")
+    else:
+      print(f"cant find process for '{self.name}'")
+      print(f"read {self.dir}/factorio-current.log")
+      return
     return
 
   def restart(self):
     if self.is_running:
       self.stop()
-    time.sleep(3)
     self.start()
     return
 
   def stop(self):
     if self.is_running:
-      psutil.Process(self.pid).terminate()
-      print(f"stopped server {self.name}")
+      print(f"stopping server '{self.name}'")
+      p = psutil.Process(self.pid)
+      p.terminate()
+      while p.is_running():
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.2)
+      print(f"stopped")
       FactorioServer.used_ports = [port for port in FactorioServer.used_ports if port != self.port]
       return
     print(f"Server {self.name} is not running")
     return
 
   def update(self):
-    print(f"updated '{self.name}'")
+    print(f"updating '{self.name}'")
     was_running = False
     if not self.check_if_updates_folder_is_ready():
       return
@@ -173,7 +185,7 @@ class FactorioServer:
     num_updates = len(download_links)
     i = 0
     for download_link in download_links:
-      print("downloading patch {}/{}".format(i+1, num_updates))
+      print(" downloading patch {}/{}".format(i+1, num_updates))
       response = requests.get(download_link)
       update_link = json.loads(response.content)[0]
       response = requests.get(update_link)
@@ -183,7 +195,7 @@ class FactorioServer:
     # apply the updates
     for j in range(i):
         try:
-            print("patching {}/{}".format(j+1,num_updates))
+            print(" patching {}/{}".format(j+1,num_updates))
             subprocess.check_output(f"{self.exe_dir}/factorio --apply-update updates/{j}.zip".split())
         except subprocess.CalledProcessError as ex:
             print(ex.output)
@@ -202,7 +214,7 @@ class FactorioServer:
 
   def __repr__(self):
     #TODO pprint
-    s_exists = "" if self.save_exists else " not"
+    s_exists = "" if self.save_exists else f"no savefile found in {self.dir}/saves"
     s_version = "" if self.version == self.find_latest_version() else f" update to {self.find_latest_version()} available"
     s_running = "stopped" if not self.is_running else f"STARTED with pid {self.pid}"
     return f'''
@@ -210,5 +222,5 @@ class FactorioServer:
 Version: {self.version}{s_version}
 {s_running}
 Port: {self.port}
-Saves do{s_exists} exist
+{s_exists}
     '''

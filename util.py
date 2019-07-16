@@ -83,6 +83,11 @@ def main():
     print_usage()
     sys.exit(1)
 
+  if sys.argv[1] not in ['help','list','start','stop','restart','update']:
+    print(f"unknown option '{sys.argv[1]}'")
+    print(f"run with no options for usage")
+    return
+
   if sys.argv[1] == "help":
     print_usage()
     return
@@ -99,6 +104,7 @@ def main():
   if servername not in [server.name for server in SERVERS] + ['all']:
     print(f"no server '{servername}' found")
     return
+
   if sys.argv[1] == "stop":
     for server in SERVERS:
       if servername == "all":
@@ -133,11 +139,8 @@ def main():
       if server.name == servername:
         server.update()
         return
-      return
-
-  # if we make it till here its an unknown option
-  print(f"unknown option '{sys.argv[1]}'")
-  print(f"run with no options for usage")
+    return
+  print("you should not be here. turn around")
   sys.exit(1)
 
 if __name__ == "__main__":

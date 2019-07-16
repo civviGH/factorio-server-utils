@@ -214,13 +214,10 @@ class FactorioServer:
 
   def __repr__(self):
     #TODO pprint
-    s_exists = "" if self.save_exists else f"no savefile found in {self.dir}/saves"
+    s_exists = "" if self.save_exists else f"no savefile found in {self.dir}/saves\n"
     s_version = "" if self.version == self.find_latest_version() else f" update to {self.find_latest_version()} available"
-    s_running = "stopped" if not self.is_running else f"STARTED with pid {self.pid}"
-    return f'''
-{self.name}
+    s_running_short = "-" if not self.is_running else f"R"
+    return f'''[{s_running_short}] {self.name}
 Version: {self.version}{s_version}
-{s_running}
 Port: {self.port}
-{s_exists}
-    '''
+{s_exists}'''

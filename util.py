@@ -40,9 +40,12 @@ def get_server_list(SETTINGS):
   server_dirs = os.listdir(SETTINGS["serverdir"])
   for server in server_dirs:
     # check if actual factorio server directory or not
+    if server == "all":
+      print("please dont use 'all' as a server name as it is a keyword for the script")
     if not os.path.isdir(f"{SETTINGS['serverdir']}/{server}"):
       continue
     if not os.path.isfile(f"{SETTINGS['serverdir']}/{server}/bin/x64/factorio"):
+      continue
       continue
     factorio_servers.append(server)
   if len(factorio_servers) == 0:
@@ -93,16 +96,22 @@ def main():
     return
 
   servername = get_servername_from_argv()
+  if servername not in [server.name for server in SERVERS] + ['all']:
+    print(f"no server '{servername}' found")
+    return
   if sys.argv[1] == "stop":
     for server in SERVERS:
+      if servername == "all":
+        server.stop()
       if server.name == servername:
         server.stop()
         return
-    print(f"No server named {servername} found.")
     return
 
   if sys.argv[1] == "start":
     for server in SERVERS:
+      if servername == "all":
+        server.start()
       if server.name == servername:
         server.start()
         return
@@ -110,6 +119,8 @@ def main():
 
   if sys.argv[1] == "restart":
     for server in SERVERS:
+      if servername == "all":
+        server.restart()
       if server.name == servername:
         server.restart()
         return
@@ -117,10 +128,12 @@ def main():
 
   if sys.argv[1] == "update":
     for server in SERVERS:
+      if servername == "all":
+        server.update()
       if server.name == servername:
         server.update()
         return
-    return
+      return
 
   # if we make it till here its an unknown option
   print(f"unknown option '{sys.argv[1]}'")

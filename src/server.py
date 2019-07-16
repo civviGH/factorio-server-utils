@@ -1,24 +1,3 @@
-"""
-Factorio Server information:
-  is_running
-  version (up to date?)
-  bindip
-  port
-  pid
-  modlist + versionen (are updates available?)
-  needed file existent?
-    server-settings
-    server-whitelist
-  does --start-server-load-latest work? (eg save file existent?)
-
-Options:
-  start
-  stop
-  getinfo (__repr__)
-  update
-  update mods
-"""
-
 import psutil, re, subprocess, socket, os, jinja2, time, json, sys
 import requests
 
@@ -28,6 +7,17 @@ class FactorioServer:
   updater_url = "https://updater.factorio.com/get-available-versions"
   download_url = "https://updater.factorio.com/get-download-link"
   latest_version = None
+
+  def check_if_updates_folder_is_ready(self):
+    # check if updates/ exists
+    if not os.path.isdir("updates/"):
+      print("no updates/ folder found")
+      return False
+    # check if its empty
+    for f in os.listdir("updates/"):
+      if not f.startswith("."):
+        return False
+    return True
 
   def get_process_information(self):
     """gathers process information for server"""
@@ -138,7 +128,8 @@ class FactorioServer:
     with open(f"{self.dir}/server-whitelist.json", "w") as wfile:
       wfile.write(json.dumps(self.settings['whitelist']))
     subprocess.Popen(f"{self.exe_dir}/factorio --start-server-load-latest --port {self.port} --server-settings {self.dir}/server-settings.json --server-whitelist {self.dir}/server-whitelist.json --use-server-whitelist".split(), stdout=subprocess.DEVNULL)
-    print("started")
+    print(f"started server {self.name} on port {self.port}")
+    FactorioServer.used_ports.append(self.port)
     return
 
   def restart(self):
@@ -151,14 +142,22 @@ class FactorioServer:
   def stop(self):
     if self.is_running:
       psutil.Process(self.pid).terminate()
-      print("stopped")
+      print(f"stopped server {self.name}")
+      FactorioServer.used_ports = [port for port in FactorioServer.used_ports if port != self.port]
       return
     print(f"Server {self.name} is not running")
     return
 
   def update(self):
-    #TODO
+    print(f"updated '{self.name}'")
+    was_running = False
+    if not self.check_if_updates_folder_is_ready():
+      return
+    if self.find_latest_version() == self.version:
+      print("server is already up to date")
+      return
     if self.is_running:
+      was_running = True
       print("server is running. stopping it")
       self.stop()
     # get list of updates
@@ -170,7 +169,31 @@ class FactorioServer:
         if update["from"] == current_version:
           download_links.append(f"{FactorioServer.download_url}?username={self.settings['username']}&token={self.settings['token']}&apiVersion=2&from={update['from']}&to={update['to']}&package=core-linux_headless64")
           current_version = update["to"]
-    #TODO list of updates is now known
+    # actually download the updates
+    num_updates = len(download_links)
+    i = 0
+    for download_link in download_links:
+      print("downloading patch {}/{}".format(i+1, num_updates))
+      response = requests.get(download_link)
+      update_link = json.loads(response.content)[0]
+      response = requests.get(update_link)
+      with open("updates/" + str(i) + ".zip", "wb") as update_download:
+        update_download.write(response.content)
+      i = i + 1
+    # apply the updates
+    for j in range(i):
+        try:
+            print("patching {}/{}".format(j+1,num_updates))
+            subprocess.check_output(f"{self.exe_dir}/factorio --apply-update updates/{j}.zip".split())
+        except subprocess.CalledProcessError as ex:
+            print(ex.output)
+            raise
+        os.remove(f"updates/{j}.zip")
+    print("Finished. Printing executable version:")
+    print(self.get_factorio_version())
+    if was_running:
+      print("server was running prior to updates. starting it again")
+      self.start()
     return
 
   def update_mods(self):
@@ -181,10 +204,11 @@ class FactorioServer:
     #TODO pprint
     s_exists = "" if self.save_exists else " not"
     s_version = "" if self.version == self.find_latest_version() else f" update to {self.find_latest_version()} available"
+    s_running = "stopped" if not self.is_running else f"STARTED with pid {self.pid}"
     return f'''
-    {self.name}
-    Version: {self.version}{s_version}
-    (running={self.is_running} with pid {self.pid})
-    Port: {self.port}
-    Saves do{s_exists} exist
+{self.name}
+Version: {self.version}{s_version}
+{s_running}
+Port: {self.port}
+Saves do{s_exists} exist
     '''

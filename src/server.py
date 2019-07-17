@@ -95,7 +95,7 @@ class FactorioServer:
     return port
 
   def create_server_settings(self):
-    j2 = jinja2.Environment(loader=jinja2.FileSystemLoader(f"{os.getcwd()}"))
+    j2 = jinja2.Environment(loader=jinja2.FileSystemLoader(f"{os.getcwd()}/templates"))
     settings_template = j2.get_template("server-settings.jj")
     data = {}
     data['servername'] = self.name

@@ -16,12 +16,12 @@ Copy the settings.json.template to settings.json and fill in the needed informat
 Example:
 ```
 {
-	"_comment_username": "Your factorio username. Used to retrieve updates",
-	"username": "name1",
-	"_comment_token": "The token for your username, used for authentication instead of password. See factorio.com user account",
-	"token": "YOURTOKENHERE",
-	"_comment_serverdir": "The directory where your headless server folders are. Absolute path",
-	"serverdir": "/path/to/factorio/servers",
+  "_comment_username": "Your factorio username. Used to retrieve updates",
+  "username": "name1",
+  "_comment_token": "The token for your username, used for authentication instead of password. See factorio.com user account",
+  "token": "YOURTOKENHERE",
+  "_comment_serverdir": "The directory where your headless server folders are. Absolute path",
+  "serverdir": "/path/to/factorio/servers",
   "_comment_whitelist": "The server whitelist used. Contains a list of strings. Create whitelist file if none is found",
   "whitelist": [
     "name1",

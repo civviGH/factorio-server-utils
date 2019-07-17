@@ -32,10 +32,11 @@ Example:
   configurations. If left empty, the os will choose the ports",
   "portrange": "34197:34220"
 }
-
 ```
 
 Then simply run `factorio-server-utility help` on how to use it.
+
+If a server started with this tool has no `server-settings.json` file it will be generated based on `templates/server-settings.jj`. Either edit the template or the `server-settings.json` after starting the server as it will not be overwritten once existent.
 
 ## limitations
 

@@ -1,9 +1,9 @@
 {
   "_comment_username": "Your factorio username. Used to retrieve updates",
 	"username": "",
-	"_comment_token": "The token for your username, used for authentication instead of password",
+	"_comment_token": "The token for your username, used for authentication instead of password. See factorio.com user account",
 	"token": "",
-	"_comment_serverdir": "The directory where your headless servers are",
+	"_comment_serverdir": "The directory where your headless server folders are. Absolute path",
 	"serverdir": "",
   "_comment_whitelist": "The server whitelist used. Contains a list of strings. Create whitelist file if none is found",
   "whitelist": [

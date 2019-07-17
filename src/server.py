@@ -1,8 +1,6 @@
 import psutil, re, subprocess, socket, os, jinja2, time, json, sys
 import requests
 
-import pprint
-
 class FactorioServer:
 
   used_ports = []

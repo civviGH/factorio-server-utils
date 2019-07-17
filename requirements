@@ -1,2 +1,6 @@
+requests
+subprocess
+re
+json
 psutil
 jinja2

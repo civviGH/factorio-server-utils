@@ -1,25 +1,12 @@
 #!/usr/bin/env python3
 
-"""
-factorio@factory:~/0.17-headless$ cat start_creative.sh
-#!/bin/bash
-creative/bin/x64/factorio --start-server creative/maps/creative.zip \
-  --port 23451 \
-	--bind 131.220.32.152 \
-	--server-settings creative/server-settings.json \
-	--server-whitelist creative/server-whitelist.json \
-	--console-log creative/logs/server.log \
-	--use-server-whitelist
-"""
-
 import sys, json, os, subprocess, re, psutil
 from src.server import *
 
 def print_usage():
-  #TODO
   usage_str ="""
   usage:
-    util.py OPTION [ARGS]
+    util.py OPTION
 
   options:
     list - list all servers
@@ -27,7 +14,10 @@ def print_usage():
     stop NAME - stop server if its running
     update NAME - update server NAME
     update-mods NAME - update the mods of NAME
-    update-all NAME - update server and mods of NAME
+    [NOT YET IMPLEMENTED] update-all NAME - update server and mods of NAME
+
+  note:
+    NAME may be the keyword 'all' to apply the option to all servers found
   """
   print(usage_str)
 
@@ -42,10 +32,10 @@ def get_server_list(SETTINGS):
     # check if actual factorio server directory or not
     if server == "all":
       print("please dont use 'all' as a server name as it is a keyword for the script")
+      continue
     if not os.path.isdir(f"{SETTINGS['serverdir']}/{server}"):
       continue
     if not os.path.isfile(f"{SETTINGS['serverdir']}/{server}/bin/x64/factorio"):
-      continue
       continue
     factorio_servers.append(server)
   if len(factorio_servers) == 0:

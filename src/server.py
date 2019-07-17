@@ -1,12 +1,35 @@
 import psutil, re, subprocess, socket, os, jinja2, time, json, sys
 import requests
 
+import pprint
+
 class FactorioServer:
 
   used_ports = []
   updater_url = "https://updater.factorio.com/get-available-versions"
   download_url = "https://updater.factorio.com/get-download-link"
+  mod_url = "https://mods.factorio.com/api/mods?page_size=max&namelist="
   latest_version = None
+
+  #
+  #
+  #
+
+  def get_latest_modrelease_by_modname(modname):
+    url = f"{FactorioServer.mod_url}{modname}"
+    response = requests.get(url)
+    try:
+      mod_json = json.loads(response.content)
+      releases = mod_json["results"][0]["releases"]
+      # this assumes that the API provides the version in an ordered fashion
+      # may change in the future
+      return releases[-1]
+    except:
+      return None
+
+  #
+  #
+  #
 
   def check_if_updates_folder_is_ready(self):
     # check if updates/ exists
@@ -128,7 +151,7 @@ class FactorioServer:
     with open(f"{self.dir}/server-whitelist.json", "w") as wfile:
       wfile.write(json.dumps(self.settings['whitelist']))
     subprocess.Popen(f"{self.exe_dir}/factorio --start-server-load-latest --port {self.port} --server-settings {self.dir}/server-settings.json --server-whitelist {self.dir}/server-whitelist.json --use-server-whitelist".split(), stdout=subprocess.DEVNULL)
-    time.sleep(1)
+    time.sleep(2)
     self.pid, self.is_running, self.port = self.get_process_information()
     if self.is_running:
       FactorioServer.used_ports.append(self.port)
@@ -209,7 +232,39 @@ class FactorioServer:
     return
 
   def update_mods(self):
-    #TODO
+    mods_changed = 0
+    print(f"updating mods of '{self.name}'")
+    # check if any mods need to be updated
+    if not os.path.isfile(f"{self.dir}/mods/mod-list.json"):
+      print(f" - no mod-list.json found. cant update mods")
+      return
+    with open(f"{self.dir}/mods/mod-list.json", "r") as mlf:
+      mod_names = [mod["name"] for mod in json.load(mlf)["mods"] if mod["name"] != "base" and mod["enabled"] == True]
+    for mod in mod_names:
+      latest_version = FactorioServer.get_latest_modrelease_by_modname(mod)
+      if latest_version is None:
+        print(f" - error retrieving latest version of '{mod}'. not updating")
+        continue
+      if os.path.isfile(f"{self.dir}/mods/{latest_version['file_name']}"):
+        continue
+      # download latest version. if successful, delete other versions
+      print(f" - updating {mod}")
+      try:
+        response = requests.get(f"https://mods.factorio.com/{latest_version['download_url']}?username={self.settings['username']}&token={self.settings['token']}")
+        with open(f"{self.dir}/mods/{latest_version['file_name']}", "wb") as downloaded_mod:
+          downloaded_mod.write(response.content)
+          mods_changed = mods_changed + 1
+      except:
+        print(f" - there was an error downloading {mod}. aborting update")
+        continue
+      for installed_mod in [m for m in os.listdir(f"{self.dir}/mods") if m.find(latest_version['file_name']) == -1]:
+        if installed_mod.startswith(f"{mod}_"):
+          os.remove(f"{self.dir}/mods/{installed_mod}")
+    if mods_changed == 0:
+      print(f"- no mods to update")
+      return
+    if self.is_running:
+      print(f"- {self.name} is running. restart to make {mods_changed} mod updates take effect")
     return
 
   def __repr__(self):

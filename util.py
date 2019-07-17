@@ -83,7 +83,7 @@ def main():
     print_usage()
     sys.exit(1)
 
-  if sys.argv[1] not in ['help','list','start','stop','restart','update']:
+  if sys.argv[1] not in ['help','list','start','stop','restart','update', 'update-mods']:
     print(f"unknown option '{sys.argv[1]}'")
     print(f"run with no options for usage")
     return
@@ -104,6 +104,8 @@ def main():
   if servername not in [server.name for server in SERVERS] + ['all']:
     print(f"no server '{servername}' found")
     return
+
+  #TODO refactor control to class
 
   if sys.argv[1] == "stop":
     for server in SERVERS:
@@ -140,6 +142,16 @@ def main():
         server.update()
         return
     return
+
+  if sys.argv[1] == "update-mods":
+    for server in SERVERS:
+      if servername == "all":
+        server.update_mods()
+      if server.name == servername:
+        server.update_mods()
+        return
+    return
+
   print("you should not be here. turn around")
   sys.exit(1)
 

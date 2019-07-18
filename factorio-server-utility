@@ -15,6 +15,7 @@ def print_usage():
     update NAME - update server NAME
     update-mods NAME - update the mods of NAME
     update-all NAME - update server and mods of NAME
+    create NAME - download latest headless server and save as NAME
 
   note:
     NAME may be the keyword 'all' to apply the option to all servers found
@@ -73,7 +74,7 @@ def main():
     print_usage()
     sys.exit(1)
 
-  if sys.argv[1] not in ['help','list','start','stop','restart','update', 'update-mods', 'update-all']:
+  if sys.argv[1] not in ['help','list','start','stop','restart','update', 'update-mods', 'update-all', 'create']:
     print(f"unknown option '{sys.argv[1]}'")
     print(f"run with no options for usage")
     return
@@ -91,7 +92,7 @@ def main():
     return
 
   servername = get_servername_from_argv()
-  if servername not in [server.name for server in SERVERS] + ['all']:
+  if sys.argv[1] != 'create' and servername not in [server.name for server in SERVERS] + ['all']:
     print(f"no server '{servername}' found")
     return
 
@@ -151,6 +152,33 @@ def main():
         server.update()
         server.update_mods()
         return
+    return
+
+  if sys.argv[1] == "create":
+    if servername == "all":
+      print(f"please dont use 'all' as a servername as it is a keyword for the script")
+      return
+    serverpath = f"{SETTINGS['serverdir']}/{servername}"
+    if os.path.isfile(serverpath) or os.path.isdir(serverpath):
+      print(f"file {serverpath} already exists")
+      return
+    # download latest
+    print(f"downloading latest headless version")
+    try:
+      response = requests.get("https://www.factorio.com/get-download/latest/headless/linux64")
+      with open("/tmp/factorio_headless.tar.xz", "wb") as headlessf:
+        headlessf.write(response.content)
+    except:
+      print(f"error downloading latest headless version")
+      raise
+      return
+    # untar into right folder
+    os.mkdir(serverpath)
+    subprocess.check_output(f"tar -C {serverpath} -xf /tmp/factorio_headless.tar.xz --strip 1".split())
+    os.mkdir(f"{serverpath}/saves")
+    # cleanup
+    os.remove("/tmp/factorio_headless.tar.xz")
+    print(f"server '{servername}' created. Please provide a save file in {serverpath}/saves")
     return
 
   print("you should not be here. turn around")

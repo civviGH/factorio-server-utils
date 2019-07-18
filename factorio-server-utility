@@ -14,7 +14,7 @@ def print_usage():
     stop NAME - stop server if its running
     update NAME - update server NAME
     update-mods NAME - update the mods of NAME
-    [NOT YET IMPLEMENTED] update-all NAME - update server and mods of NAME
+    update-all NAME - update server and mods of NAME
 
   note:
     NAME may be the keyword 'all' to apply the option to all servers found
@@ -73,7 +73,7 @@ def main():
     print_usage()
     sys.exit(1)
 
-  if sys.argv[1] not in ['help','list','start','stop','restart','update', 'update-mods']:
+  if sys.argv[1] not in ['help','list','start','stop','restart','update', 'update-mods', 'update-all']:
     print(f"unknown option '{sys.argv[1]}'")
     print(f"run with no options for usage")
     return
@@ -138,6 +138,17 @@ def main():
       if servername == "all":
         server.update_mods()
       if server.name == servername:
+        server.update_mods()
+        return
+    return
+
+  if sys.argv[1] == "update-all":
+    for server in SERVERS:
+      if servername == "all":
+        server.update()
+        server.update_mods()
+      if server.name == servername:
+        server.update()
         server.update_mods()
         return
     return

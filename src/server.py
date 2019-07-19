@@ -7,6 +7,7 @@ class FactorioServer:
   updater_url = "https://updater.factorio.com/get-available-versions"
   download_url = "https://updater.factorio.com/get-download-link"
   mod_url = "https://mods.factorio.com/api/mods?page_size=max&namelist="
+  multiplayer_api = "https://multiplayer.factorio.com/get-game-details/"
   latest_version = None
 
   #
@@ -29,6 +30,16 @@ class FactorioServer:
   #
   #
 
+  def get_playercount(self):
+    if not self.is_running:
+      return 0
+    response = requests.get(f"{FactorioServer.multiplayer_api}{self.game_id}")
+    server_description = json.loads(response.content)
+    try:
+      return len(server_description['players'])
+    except:
+      return 0
+
   def check_if_updates_folder_is_ready(self):
     # check if updates/ exists
     if not os.path.isdir("updates/"):
@@ -47,12 +58,12 @@ class FactorioServer:
       if p['exe'].find(f"/{self.name}/bin/x64/factorio") != -1:
         # server is running
         # get port from server logs
-        regex = re.compile(r'--port\" \"\d+\"')
+        regex = re.compile(r'--port\" \"(\d+)\"')
         with open(f"{self.dir}/factorio-current.log") as f:
           for line in f:
             result = regex.search(line)
             if result is not None:
-              port = int(result.group(0).split()[1].strip("\""))
+              port = int(result.group(1))
               return p['pid'], True, port
         return p['pid'], True, None
     return None, False, None
@@ -113,6 +124,15 @@ class FactorioServer:
       return True
     return False
 
+  def get_game_id_from_log(self):
+    regex = re.compile(r'Matching server game `(\d*)` has been created')
+    with open(f"{self.dir}/factorio-current.log") as f:
+      for line in f:
+        result = regex.search(line)
+        if result is not None:
+          return result.group(1)
+    return None
+
   def __init__(self, servername, settings):
     self.name = servername
     self.settings = settings
@@ -128,6 +148,11 @@ class FactorioServer:
       self.portrange = [int(i) for i in self.settings['portrange'].split(":")]
     except:
       self.portrange = None
+    if self.is_running:
+      self.game_id = self.get_game_id_from_log()
+    else:
+      self.game_id = None
+
     return
 
   def start(self):
@@ -265,13 +290,13 @@ class FactorioServer:
       print(f"- {self.name} is running. restart to make {mods_changed} mod updates take effect")
     return
 
-
   def __repr__(self):
     #TODO pprint
+    s_playercount = "" if not self.is_running else f"Players: {self.get_playercount()}\n"
     s_exists = "" if self.save_exists else f"no savefile found in {self.dir}/saves\n"
     s_version = "" if self.version == self.find_latest_version() else f" update to {self.find_latest_version()} available"
     s_running_short = "-" if not self.is_running else f"R"
     return f'''[{s_running_short}] {self.name}
 Version: {self.version}{s_version}
-Port: {self.port}
-{s_exists}'''
+Port: {self.port} | Gameid: {self.game_id}
+{s_playercount}{s_exists}'''

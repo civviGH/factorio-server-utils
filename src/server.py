@@ -188,7 +188,7 @@ class FactorioServer:
   def restart(self):
     if self.is_running:
       self.stop()
-    self.start()
+      self.start()
     return
 
   def stop(self):

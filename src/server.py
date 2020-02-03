@@ -99,6 +99,7 @@ class FactorioServer:
     return FactorioServer.latest_version
 
   def get_free_port_from_os(self):
+    # shouldnt this be a UDP socket instead of a TCP?
     tcp_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp_connection.bind(('', 0))
     addr, port = tcp_connection.getsockname()

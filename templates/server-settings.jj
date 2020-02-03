@@ -62,5 +62,5 @@
   "non_blocking_saving": false,
 
   "_comment_admins": "List of case insensitive usernames, that will be promoted immediately",
-  "admins": ["civvi"]
+  "admins": ["civvi","shangri"]
 }

@@ -100,10 +100,10 @@ class FactorioServer:
 
   def get_free_port_from_os(self):
     # shouldnt this be a UDP socket instead of a TCP?
-    tcp_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_connection.bind(('', 0))
-    addr, port = tcp_connection.getsockname()
-    tcp_connection.close()
+    udp_connection = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_connection.bind(('', 0))
+    addr, port = udp_connection.getsockname()
+    udp_connection.close()
     return port
 
   def create_server_settings(self):
@@ -190,6 +190,8 @@ class FactorioServer:
     if self.is_running:
       self.stop()
       self.start()
+    else:
+      print(f"server {self.name} is not running. Not going to restart it")
     return
 
   def stop(self):

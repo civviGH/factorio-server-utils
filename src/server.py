@@ -133,7 +133,24 @@ class FactorioServer:
         if result is not None:
           return result.group(1)
     return None
-
+  
+  def get_modlist(self):
+    # check if modlist file exists
+    modlist_path = f"{self.dir}/mods/mod-list.json"
+    if not os.path.isfile(modlist_path):
+      return []
+    # parse json file
+    with open(modlist_path, "r") as f:
+      modlist = json.loads(f.read())["mods"]
+    returnlist = []
+    for mod in modlist:
+      if mod["name"] == "base":
+        continue
+      if mod["enabled"]:
+        returnlist.append(mod["name"])
+    return returnlist
+    # sort the modlist
+    
   def __init__(self, servername, settings):
     self.name = servername
     self.settings = settings
@@ -153,6 +170,7 @@ class FactorioServer:
       self.game_id = self.get_game_id_from_log()
     else:
       self.game_id = None
+    self.modlist = self.get_modlist()
 
     return
 
@@ -294,12 +312,37 @@ class FactorioServer:
     return
 
   def __repr__(self):
-    #TODO pprint
-    s_playercount = "" if not self.is_running else f"Players: {self.get_playercount()}\n"
-    s_exists = "" if self.save_exists else f"no savefile found in {self.dir}/saves\n"
-    s_version = "" if self.version == self.find_latest_version() else f" update to {self.find_latest_version()} available"
+    repr_lines = []
+
     s_running_short = "-" if not self.is_running else f"R"
-    return f'''[{s_running_short}] {self.name}
-Version: {self.version}{s_version}
-Port: {self.port} | Gameid: {self.game_id}
-{s_playercount}{s_exists}'''
+    repr_lines.append(
+      f"[{s_running_short}] {self.name}"
+    )
+
+    s_version = "" if self.version == self.find_latest_version() else f" update to {self.find_latest_version()} available"
+    repr_lines.append(
+      f"Version: {self.version}{s_version}"
+    )
+
+    repr_lines.append(
+      f"Port: {self.port} | GameId: {self.game_id}"
+    )
+
+    if not self.save_exists:
+      repr_lines.append(
+        f"no savefile found in {self.dir}/saves"
+      )
+
+    if self.is_running:
+      repr_lines.append(
+        f"Players: {self.get_playercount()}"
+      )
+
+    if len(self.modlist) > 0:
+      repr_lines.append("Mods: ")
+      # repr_lines.append(",".join(self.modlist))
+      for mod in self.modlist:
+        repr_lines.append(f"  {mod}")
+
+    repr_lines.append("")
+    return "\n".join(repr_lines)

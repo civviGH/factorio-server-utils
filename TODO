@@ -1,0 +1,40 @@
+Django 3:
+    ☐ Simple user login
+    ☐ custom permissions per user
+    ☐ database structure for server information
+        (HIDDEN) id/incremental
+        server name - must be unique
+        is it running
+        which mods does it run
+            how many mods does it run
+        which version
+            are there updates?
+        how many players
+        name of the savefile (?)
+        bound port
+        ☐ db information for mods
+            maybe just a string, comma seperaterd list
+            are mods enabled or not
+            are mods up to date
+    ☐ prototype the view
+        bootstrap?
+    ☐ understand forms to make api calls
+
+API:
+    ☐ Start a server by name
+    ☐ Stop a server by name
+    ☐ Restart a server by name
+    ☐ Create a server with a given version and name
+    ☐ Update a server by name
+    what is unique mod identifier? modname?
+    ☐ Update mods of a server by names
+    ☐ Install Mods of a server by names
+        ☐ Enable/Disable Mods of a server by names
+    ☐ Change the global server settings
+        maybe not as a whole, but relevant parts
+        ☐ add/remove whitelist entry
+        username/token/server_dir/portrange?
+    ☐ List all servers with all information
+
+package cache? for headless server and mod files etc...
+server settings per server
